@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Settings, 
@@ -39,7 +41,7 @@ import {
   uploadToImgBB, 
   uploadToImgur,
   getGemojiList
-} from './utils/emoji';
+} from '../src/utils/emoji';
 
 const DuplicateIcon = Copy;
 
@@ -102,7 +104,11 @@ const m3 = {
 
 export default function App() {
   // Theme state
-  const [theme, setTheme] = useState(localStorage.getItem('mojisnap_theme') || 'dark');
+  const [theme, setTheme] = useState('dark');
+  useEffect(() => {
+    const saved = localStorage.getItem('mojisnap_theme');
+    if(saved) setTheme(saved);
+  }, []);
 
   // Input states
   const [inputText, setInputText] = useState('🚀');
@@ -1813,15 +1819,24 @@ export default function App() {
           <div className="flex-1 flex flex-col min-h-0">
             <span className="block text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1.5 shrink-0">Library Quick Emojis</span>
             <div className="grid grid-cols-6 gap-1.5 p-2 bg-zinc-100/30 dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-900 rounded-xl overflow-y-auto flex-1 min-h-0">
-              {POPULAR_EMOJIS.map((emoji, index) => (
-                <button
-                  key={index}
-                  onClick={() => addLayer(emoji)}
-                  className="text-lg p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center transform active:scale-95 text-zinc-700 dark:text-zinc-300"
-                >
-                  {emoji}
-                </button>
-              ))}
+              <div className="flex flex-col gap-4">
+                {Object.entries(POPULAR_EMOJIS).map(([category, emojis]) => (
+                  <div key={category}>
+                    <span className="block text-[8px] font-bold text-zinc-500 uppercase tracking-wider mb-2 sticky top-0 bg-zinc-100 dark:bg-zinc-900 py-1 z-10">{category}</span>
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {emojis.map((emoji, index) => (
+                        <button
+                          key={index}
+                          onClick={() => addLayer(emoji)}
+                          className="text-lg p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center transform active:scale-95 text-zinc-700 dark:text-zinc-300"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

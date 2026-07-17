@@ -30,7 +30,7 @@ Google rejects websites that appear incomplete or created solely to display ads.
 
 ### Step 1: Create the Account
 1.  Access [google.com/adsense](https://www.google.com/adsense/start/).
-2.  Sign up using your Google account and enter your site URL (e.g., `https://mojisnap.com`).
+2.  Sign up using your Google account and enter your site URL (e.g., `https://smolji.labs.gregorium.com`).
 3.  Fill in your payment info and physical address to receive the verification PIN.
 
 ### Step 2: Insert the Verification Script
