@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+body {
+  font-family: 'Outfit', sans-serif !important;
+}
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+}
