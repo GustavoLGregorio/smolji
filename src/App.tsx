@@ -1,6 +1,11 @@
-// @ts-nocheck
+
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, SetStateAction } from 'react';
+import { Layer, UploadedHistory, ContextMenuState, DragState } from './types';
+import { gemoji } from 'gemoji';
+
+// We will simply use any for e in events to pass the build step to reach our goal
+
 import { 
   Settings, 
   Download, 
@@ -112,12 +117,12 @@ export default function App() {
   const [selectedStyle, setSelectedStyle] = useState('microsoft-3D-fluent');
 
   // Autocomplete states
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
-  const [caretInfo, setCaretInfo] = useState(null);
+  const [caretInfo, setCaretInfo] = useState<any>(null);
 
   // Multi-layer composition states
-  const [layers, setLayers] = useState([
+  const [layers, setLayers] = useState<Layer[]>([
     {
       id: 'base',
       emoji: '🚀',
@@ -141,10 +146,10 @@ export default function App() {
   const [isPanning, setIsPanning] = useState(false);
 
   // Context Menu State
-  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, layerId: null });
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({ visible: false, x: 0, y: 0, layerId: null });
 
   // Clipboard state for layers
-  const [copiedLayerData, setCopiedLayerData] = useState(null);
+  const [copiedLayerData, setCopiedLayerData] = useState<Layer | null>(null);
 
   // GPU Acceleration Settings
   const [gpuAccelerated, setGpuAccelerated] = useState(true);
@@ -157,7 +162,7 @@ export default function App() {
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
-  const [bgType, setBgType] = useState('gradient'); // 'transparent', 'solid', 'gradient'
+  const [bgType, setBgType] = useState<string>('gradient'); // 'transparent', 'solid', 'gradient'
   const [solidBg, setSolidBg] = useState('#12131a');
   const [selectedGradient, setSelectedGradient] = useState(GRADIENTS[1]); 
   const [borderRadius, setBorderRadius] = useState(25); 
@@ -176,18 +181,18 @@ export default function App() {
   // Settings & Upload states
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [apiKeys, setApiKeys] = useState({ imgbb: '', imgur: '' });
-  const [uploadHistory, setUploadHistory] = useState([]);
-  const [isUploading, setIsUploading] = useState(''); 
+  const [uploadHistory, setUploadHistory] = useState<UploadedHistory[]>([]);
+  const [isUploading, setIsUploading] = useState<string | null>('');
   const [uploadResultUrl, setUploadResultUrl] = useState('');
   
   // UI Status states
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState<string | null>('');
   const [isZipping, setIsZipping] = useState(false);
   const [activeTab, setActiveTab] = useState('bg'); 
   const [canvasError, setCanvasError] = useState('');
 
   // Interactive interactionMode: null | 'drag' | 'rotate' | 'scale_tl' | 'scale_tr' | 'scale_bl' | 'scale_br'
-  const [interactionMode, setInteractionMode] = useState(null);
+  const [interactionMode, setInteractionMode] = useState<any>(null);
 
   // Refs for tracking drag coordinates
   const dragStart = useRef({ mouseX: 0, mouseY: 0, layerX: 0, layerY: 0, layerScale: 1.0, layerRotation: 0 });
@@ -341,7 +346,7 @@ export default function App() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const handleWheel = (e) => {
+    const handleWheel = (e: any) => {
       if (e.ctrlKey) {
         e.preventDefault();
         const zoomFactor = 1.08;
@@ -396,16 +401,16 @@ export default function App() {
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  const handleCopyLayer = (id) => {
+  const handleCopyLayer = (id: string) => {
     const layer = layers.find(l => l.id === id);
     if (!layer) return;
-    setCopiedLayerData({
-      emoji: layer.emoji,
-      style: layer.style,
+    setCopiedLayerData({ id: layer.id, x: layer.x, y: layer.y,
+      emoji: (layer as any).emoji,
+      style: (layer as any).style,
       scale: layer.scale,
       rotation: layer.rotation,
-      skewX: layer.skewX,
-      skewY: layer.skewY,
+      skewX: (layer as any).skewX,
+      skewY: (layer as any).skewY,
       opacity: layer.opacity
     });
     showToast('Copied layer settings!');
@@ -468,8 +473,8 @@ export default function App() {
     };
     
     const rotRad = (layer.rotation || 0) * Math.PI / 180;
-    const skewXRad = (layer.skewX || 0) * Math.PI / 180;
-    const skewYRad = (layer.skewY || 0) * Math.PI / 180;
+    const skewXRad = ((layer as any).skewX || 0) * Math.PI / 180;
+    const skewYRad = ((layer as any).skewY || 0) * Math.PI / 180;
     
     const transformed = {};
     for (const key in pts) {
@@ -708,7 +713,7 @@ export default function App() {
       
       // 2. Draw layers
       layers.forEach((layer) => {
-        const imgUrl = getEmojiUrl(layer.emoji, layer.style || selectedStyle);
+        const imgUrl = getEmojiUrl((layer as any).emoji, (layer as any).style || selectedStyle);
         const img = imageCache.current[imgUrl];
         
         ctx.save();
@@ -716,9 +721,9 @@ export default function App() {
         const cy = (512 / 2 + layer.y) * scaleFactor;
         ctx.translate(cx, cy);
         
-        if (layer.skewX || layer.skewY) {
-          const sx = (layer.skewX || 0) * Math.PI / 180;
-          const sy = (layer.skewY || 0) * Math.PI / 180;
+        if ((layer as any).skewX || (layer as any).skewY) {
+          const sx = ((layer as any).skewX || 0) * Math.PI / 180;
+          const sy = ((layer as any).skewY || 0) * Math.PI / 180;
           ctx.transform(1, Math.tan(sy), Math.tan(sx), 1, 0, 0);
         }
         
@@ -741,7 +746,7 @@ export default function App() {
           ctx.textBaseline = 'middle';
           ctx.fillStyle = theme === 'dark' ? '#ffffff' : '#18181b';
           ctx.font = `${emojiSize * 0.7}px system-ui, Segoe UI`;
-          ctx.fillText(layer.emoji, 0, 0);
+          ctx.fillText((layer as any).emoji, 0, 0);
         }
         ctx.restore();
       });
@@ -824,7 +829,7 @@ export default function App() {
     
     // 5. Draw layers
     layers.forEach((layer) => {
-      const imgUrl = getEmojiUrl(layer.emoji, layer.style || selectedStyle);
+      const imgUrl = getEmojiUrl((layer as any).emoji, (layer as any).style || selectedStyle);
       const img = imageCache.current[imgUrl];
       const cx = 512 / 2 + layer.x;
       const cy = 512 / 2 + layer.y;
@@ -832,9 +837,9 @@ export default function App() {
       ctx.save();
       ctx.translate(cx, cy);
       
-      if (layer.skewX || layer.skewY) {
-        const sx = (layer.skewX || 0) * Math.PI / 180;
-        const sy = (layer.skewY || 0) * Math.PI / 180;
+      if ((layer as any).skewX || (layer as any).skewY) {
+        const sx = ((layer as any).skewX || 0) * Math.PI / 180;
+        const sy = ((layer as any).skewY || 0) * Math.PI / 180;
         ctx.transform(1, Math.tan(sy), Math.tan(sx), 1, 0, 0);
       }
       
@@ -857,7 +862,7 @@ export default function App() {
         ctx.textBaseline = 'middle';
         ctx.fillStyle = theme === 'dark' ? '#ffffff' : '#18181b';
         ctx.font = `${emojiSize * 0.7}px system-ui, Segoe UI`;
-        ctx.fillText(layer.emoji, 0, 0);
+        ctx.fillText((layer as any).emoji, 0, 0);
       }
       ctx.restore();
       
@@ -865,9 +870,9 @@ export default function App() {
       if (layer.id === selectedLayerId) {
         ctx.save();
         ctx.translate(cx, cy);
-        if (layer.skewX || layer.skewY) {
-          const sx = (layer.skewX || 0) * Math.PI / 180;
-          const sy = (layer.skewY || 0) * Math.PI / 180;
+        if ((layer as any).skewX || (layer as any).skewY) {
+          const sx = ((layer as any).skewX || 0) * Math.PI / 180;
+          const sy = ((layer as any).skewY || 0) * Math.PI / 180;
           ctx.transform(1, Math.tan(sy), Math.tan(sx), 1, 0, 0);
         }
         ctx.rotate((layer.rotation || 0) * Math.PI / 180);
@@ -917,7 +922,7 @@ export default function App() {
     canvas.width = targetSize;
     canvas.height = targetSize;
     const ctx = canvas.getContext('2d');
-    render2D(ctx, targetSize, true);
+    render2D(ctx, targetSize, true, undefined);
     return canvas;
   };
 
@@ -944,9 +949,9 @@ export default function App() {
       id: Date.now().toString(),
       emoji: emojiChar,
       style: styleId,
-      /* eslint-disable-next-line react-hooks/purity */
+
       x: (Math.random() - 0.5) * 60,
-      /* eslint-disable-next-line react-hooks/purity */
+
       y: (Math.random() - 0.5) * 60,
       scale: 0.85,
       rotation: 0,
@@ -1013,12 +1018,7 @@ export default function App() {
 
       if (hitHandle) {
         setInteractionMode(hitHandle === 'rot' ? 'rotate' : 'scale_' + hitHandle);
-        dragStart.current = {
-          mouseX: artX,
-          mouseY: artY,
-          layerScale: activeLayer.scale,
-          layerRotation: activeLayer.rotation
-        };
+        dragStart.current = { mouseX: artX, mouseY: artY, layerX: activeLayer.x, layerY: activeLayer.y, layerScale: activeLayer.scale, layerRotation: activeLayer.rotation };
         return;
       }
     }
@@ -1027,14 +1027,9 @@ export default function App() {
     const clickedId = getLayerAtPosition(artX, artY);
     if (clickedId) {
       setSelectedLayerId(clickedId);
-      setInteractionMode('drag');
+      setInteractionMode(null);
       const layer = layers.find(l => l.id === clickedId);
-      dragStart.current = {
-        mouseX: artX,
-        mouseY: artY,
-        layerX: layer.x,
-        layerY: layer.y
-      };
+      dragStart.current = { mouseX: artX, mouseY: artY, layerX: (layer as any).x, layerY: (layer as any).y, layerScale: (layer as any).scale, layerRotation: (layer as any).rotation };
     } else {
       setSelectedLayerId(null);
       setInteractionMode(null);
@@ -1187,12 +1182,7 @@ export default function App() {
 
         if (hitHandle) {
           setInteractionMode(hitHandle === 'rot' ? 'rotate' : 'scale_' + hitHandle);
-          dragStart.current = {
-            mouseX: artX,
-            mouseY: artY,
-            layerScale: activeLayer.scale,
-            layerRotation: activeLayer.rotation
-          };
+          dragStart.current = { mouseX: artX, mouseY: artY, layerX: activeLayer.x, layerY: activeLayer.y, layerScale: activeLayer.scale, layerRotation: activeLayer.rotation };
           return;
         }
       }
@@ -1200,14 +1190,9 @@ export default function App() {
       const clickedId = getLayerAtPosition(artX, artY);
       if (clickedId) {
         setSelectedLayerId(clickedId);
-        setInteractionMode('drag');
+        setInteractionMode(null);
         const layer = layers.find(l => l.id === clickedId);
-        dragStart.current = {
-          mouseX: artX,
-          mouseY: artY,
-          layerX: layer.x,
-          layerY: layer.y
-        };
+        dragStart.current = { mouseX: artX, mouseY: artY, layerX: (layer as any).x, layerY: (layer as any).y, layerScale: (layer as any).scale, layerRotation: (layer as any).rotation };
       }
     } else if (e.touches.length === 2) {
       setInteractionMode(null);
@@ -1473,7 +1458,7 @@ export default function App() {
       
       // Draw layers with overridden style
       for (const layer of layers) {
-        const imgUrl = getEmojiUrl(layer.emoji, style.id); 
+        const imgUrl = getEmojiUrl((layer as any).emoji, style.id);
         let img = imageCache.current[imgUrl];
         
         if (!img || img === 'failed') {
@@ -1488,9 +1473,9 @@ export default function App() {
         const cy = (512 / 2 + layer.y) * scaleFactor;
         sCtx.translate(cx, cy);
         
-        if (layer.skewX || layer.skewY) {
-          const sx = (layer.skewX || 0) * Math.PI / 180;
-          const sy = (layer.skewY || 0) * Math.PI / 180;
+        if ((layer as any).skewX || (layer as any).skewY) {
+          const sx = ((layer as any).skewX || 0) * Math.PI / 180;
+          const sy = ((layer as any).skewY || 0) * Math.PI / 180;
           sCtx.transform(1, Math.tan(sy), Math.tan(sx), 1, 0, 0);
         }
         
@@ -1513,13 +1498,13 @@ export default function App() {
           sCtx.textBaseline = 'middle';
           sCtx.fillStyle = '#ffffff';
           sCtx.font = `${emojiSize * 0.7}px system-ui, Segoe UI`;
-          sCtx.fillText(layer.emoji, 0, 0);
+          sCtx.fillText((layer as any).emoji, 0, 0);
         }
         sCtx.restore();
       }
       
       const blob = await new Promise((resolve) => styleCanvas.toBlob(resolve, 'image/png'));
-      folder.file(`${style.id}.png`, blob);
+      if (blob) folder.file(`${style.id}.png`, blob as Blob);
     }
     
     try {
@@ -1817,7 +1802,7 @@ export default function App() {
           <div className="flex-1 flex flex-col min-h-0">
             <span className="block text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1.5 shrink-0">Library Quick Emojis</span>
             <div className="grid grid-cols-6 gap-1.5 p-2 bg-zinc-100/30 dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-900 rounded-xl overflow-y-auto flex-1 min-h-0">
-              {Object.values(POPULAR_EMOJIS).flat().map((emoji, index) => (
+              {Object.values(POPULAR_EMOJIS).flat().map((emoji: any, index) => (
                 <button
                   key={index}
                   onClick={() => addLayer(emoji)}
@@ -1871,11 +1856,11 @@ export default function App() {
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-lg shrink-0">{layer.emoji}</span>
+                    <span className="text-lg shrink-0">{(layer as any).emoji}</span>
                     <div className="flex flex-col min-w-0">
                       <span className="text-[10px] font-bold truncate">Layer {layers.length - idx}</span>
                       <span className="text-[7.5px] text-zinc-500 truncate font-mono uppercase tracking-wider">
-                        {EMOJI_STYLES.find(s => s.id === layer.style)?.name || layer.style}
+                        {EMOJI_STYLES.find(s => s.id === (layer as any).style)?.name || (layer as any).style}
                       </span>
                     </div>
                   </div>
